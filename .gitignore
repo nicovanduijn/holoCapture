@@ -18,6 +18,7 @@ ExportedObj/
 *.pidb
 *.booproj
 *.svd
+TemporaryGeneratedFile*
 
 # Visual Studio 2015 cache directory
 /.vs/
