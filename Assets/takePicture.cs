@@ -8,6 +8,7 @@ using System.IO;
 public class takePicture : MonoBehaviour {
     bool go = false;
     PhotoCapture photoCaptureObject = null;
+    public sendData sendModule = null;
     CameraParameters c = new CameraParameters();
 
     // Use this for initialization
@@ -83,6 +84,8 @@ public class takePicture : MonoBehaviour {
         }
     }
 
+    int viewNumber = 0;
+
     void OnCapturedPhotoToMemory(PhotoCapture.PhotoCaptureResult result, PhotoCaptureFrame photoCaptureFrame)
     {
         if (result.success)
@@ -97,6 +100,7 @@ public class takePicture : MonoBehaviour {
             string filePath = System.IO.Path.Combine(Application.persistentDataPath, "CapturedImage" + Time.time + ".png");
             Debug.Log("!!!!!!!!!!!!!!!" + filePath);
             File.WriteAllBytes(filePath, PNGfile);//todo: enumerate
+
             Debug.Log("saved png");
 
 
@@ -106,6 +110,7 @@ public class takePicture : MonoBehaviour {
             {
                 filePath = System.IO.Path.Combine(Application.persistentDataPath, "CapturedImage" + Time.time + ".png.matr");
                 File.WriteAllText(filePath, worldTrans + "\n\n" + viewTrans);
+                sendModule.addView(worldTrans, viewTrans, filePath);
             }
             else
             {
@@ -129,6 +134,7 @@ public class takePicture : MonoBehaviour {
 
         if (Time.time > target)
         {
+            viewNumber = 0;
             target += 10;
             PhotoCapture.CreateAsync(false, OnPhotoCaptureCreated);
             Debug.Log("10 seconds elapsed");
