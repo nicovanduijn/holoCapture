@@ -6,15 +6,18 @@ using UnityEngine.VR.WSA.WebCam;
 using System.IO;
 
 public class takePicture : MonoBehaviour {
-    bool go = false;
+    public int numberOfPics = 10;
+    public bool takePhotos;
     PhotoCapture photoCaptureObject = null;
     public sendData sendModule = null;
+    public captureMesh captureModule = null;
     CameraParameters c = new CameraParameters();
 
     // Use this for initialization
     void Start()
     {
         Debug.Log("Reached Start()");
+        viewNumber = 0;
         //PhotoCapture.CreateAsync(false, OnPhotoCaptureCreated);
     }
 
@@ -97,7 +100,7 @@ public class takePicture : MonoBehaviour {
             photoCaptureFrame.UploadImageDataToTexture(targetTexture);
 
             byte[] PNGfile = targetTexture.EncodeToPNG();
-            string filePath = System.IO.Path.Combine(Application.persistentDataPath, "CapturedImage" + Time.time + ".png");
+            string filePath = System.IO.Path.Combine(Application.persistentDataPath, "CapturedImage" + viewNumber + ".png");
             Debug.Log("!!!!!!!!!!!!!!!" + filePath);
             File.WriteAllBytes(filePath, PNGfile);//todo: enumerate
 
@@ -108,7 +111,7 @@ public class takePicture : MonoBehaviour {
             Matrix4x4 viewTrans;
             if (photoCaptureFrame.TryGetCameraToWorldMatrix(out worldTrans) && photoCaptureFrame.TryGetProjectionMatrix(out viewTrans))
             {
-                filePath = System.IO.Path.Combine(Application.persistentDataPath, "CapturedImage" + Time.time + ".png.matr");
+                filePath = System.IO.Path.Combine(Application.persistentDataPath, "CapturedImage" + viewNumber + ".png.matr");
                 File.WriteAllText(filePath, worldTrans + "\n\n" + viewTrans);
                 sendModule.addView(worldTrans, viewTrans, filePath);
             }
@@ -117,6 +120,15 @@ public class takePicture : MonoBehaviour {
                 Debug.LogError("failed to save matrices");
             }
 
+            AudioSource[] clickSound = GetComponents<AudioSource>();
+            clickSound[0].Play();
+
+            if (viewNumber > numberOfPics)
+            {
+                captureModule.save = true;
+                captureModule.recording = false;
+                takePhotos = false;
+            }
 
         }
         // Clean up
@@ -124,7 +136,6 @@ public class takePicture : MonoBehaviour {
     }
 
 
-    bool taken = false;
     double target = 10;
     // Update is called once per frame
     void Update()
@@ -132,14 +143,14 @@ public class takePicture : MonoBehaviour {
         //Debug.Log("time is");
         //Debug.Log(Time.time.ToString());
 
-        if (Time.time > target)
+        
+        if (takePhotos&&Time.time > target)
         {
-            viewNumber = 0;
-            target += 10;
+            viewNumber++;
+            target = Time.time + 10;
+            captureModule.recording = true;
             PhotoCapture.CreateAsync(false, OnPhotoCaptureCreated);
             Debug.Log("10 seconds elapsed");
-
-
         }
 
     }
